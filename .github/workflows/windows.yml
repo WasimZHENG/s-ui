@@ -145,7 +145,7 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.vars.outputs.tag }}
-          name: S-UI ${{ steps.vars.outputs.tag }}
+          name: s-ui ${{ steps.vars.outputs.tag }}
           target_commitish: ${{ github.sha }}
           fail_on_unmatched_files: true
           files: release-assets/*
