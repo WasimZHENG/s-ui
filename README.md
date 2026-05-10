@@ -1,8 +1,8 @@
-# S-UI
-**基于 SagerNet/Sing-Box 构建的高级 Web 面板**
+## S-UI
+基于`SagerNet/Sing-Box`构建的高级 Web 面板，基于`alireza0/s-ui`的最后一个版本。
 
 
-> **免责声明：** 本项目仅供个人学习与交流使用，请勿用于非法用途，请勿在生产环境中使用。
+> **免责声明：** 本项目仅供个人学习与交流使用，请勿用于非法用途。
 
 
 ## 快速概览
@@ -24,9 +24,6 @@
 | Windows | amd64, 386, arm64 | 支持 |
 | macOS | amd64, arm64 | 实验性支持 |
 
-## API 文档
-
-[API 文档 Wiki](https://github.com/admin8800/s-ui/wiki/API-Documentation)
 
 ## 默认安装信息
 - 面板端口：2095
@@ -233,3 +230,5 @@ certbot certonly --standalone --register-unsafely-without-email --non-interactiv
 ```
 
 </details>
+
+#### 鸣谢原作者：alireza0

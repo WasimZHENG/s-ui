@@ -195,6 +195,5 @@ jobs:
           tag_name: ${{ steps.vars.outputs.tag }}
           name: S-UI ${{ steps.vars.outputs.tag }}
           target_commitish: ${{ github.sha }}
-          prerelease: true
           fail_on_unmatched_files: true
           files: release-assets/*
