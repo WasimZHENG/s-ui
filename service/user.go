@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/alireza0/s-ui/database"
-	"github.com/alireza0/s-ui/database/model"
-	"github.com/alireza0/s-ui/logger"
-	"github.com/alireza0/s-ui/util/common"
+	"github.com/admin8800/s-ui/database"
+	"github.com/admin8800/s-ui/database/model"
+	"github.com/admin8800/s-ui/logger"
+	"github.com/admin8800/s-ui/util/common"
 )
 
 type UserService struct {

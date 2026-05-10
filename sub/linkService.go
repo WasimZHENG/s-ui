@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/alireza0/s-ui/logger"
-	"github.com/alireza0/s-ui/util"
+	"github.com/admin8800/s-ui/logger"
+	"github.com/admin8800/s-ui/util"
 )
 
 type Link struct {
