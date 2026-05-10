@@ -9,6 +9,9 @@ on:
         default: "v1.4.1"
         type: string
 
+permissions:
+  contents: write
+
 env:
   NODE_VERSION: "25"
   CRONET_GO_VERSION: "2fef65f9dba90ddb89a87d00a6eb6165487c10c1"
@@ -19,10 +22,9 @@ jobs:
   build-frontend:
     runs-on: ubuntu-latest
     steps:
-      - name: 检出仓库（仅前端）
+      - name: 检出仓库
         uses: actions/checkout@v6.0.2
         with:
-          ref: ${{ inputs.tag }}
           submodules: recursive
           fetch-depth: 1
 
@@ -30,7 +32,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
       - name: 构建前端
@@ -38,13 +40,13 @@ jobs:
           cd frontend
           npm install
           npm run build
-          cd ..
 
-      - name: 上传前端 dist
+      - name: 上传前端构建产物
         uses: actions/upload-artifact@v7
         with:
           name: frontend-dist
           path: frontend/dist/
+          retention-days: 1
 
   build-linux:
     name: 构建-${{ matrix.platform }}
@@ -64,10 +66,8 @@ jobs:
     steps:
       - name: 检出仓库
         uses: actions/checkout@v6.0.2
-        with:
-          ref: ${{ inputs.tag }}
 
-      - name: 下载前端 dist
+      - name: 下载前端构建产物
         uses: actions/download-artifact@v8
         with:
           name: frontend-dist
@@ -79,8 +79,7 @@ jobs:
           cache: false
           go-version-file: go.mod
 
-      # Naive 平台：仅使用 cronet 工具链（不使用 Bootlin）。
-      - name: 克隆 cronet-go（naive 使用的 cronet 工具链）
+      - name: 克隆 cronet-go（naive 平台）
         if: matrix.naive
         run: |
           set -e
@@ -98,19 +97,7 @@ jobs:
           cd ~/cronet-go
           GPG_TTY=/dev/null ./naiveproxy/src/build/linux/sysroot_scripts/generate_keyring.sh
 
-      - name: 缓存 Chromium 工具链
-        if: matrix.naive
-        id: cache-chromium-toolchain
-        uses: actions/cache@v5
-        with:
-          path: |
-            ~/cronet-go/naiveproxy/src/third_party/llvm-build/
-            ~/cronet-go/naiveproxy/src/gn/out/
-            ~/cronet-go/naiveproxy/src/chrome/build/pgo_profiles/
-            ~/cronet-go/naiveproxy/src/out/sysroot-build/
-          key: chromium-toolchain-${{ matrix.platform }}-musl-${{ env.CRONET_GO_VERSION }}
-
-      - name: 构建 cronet 库并设置工具链环境（CC、CXX、CGO_LDFLAGS、PATH）
+      - name: 构建 cronet 库并设置工具链环境
         if: matrix.naive
         run: |
           set -e
@@ -122,15 +109,14 @@ jobs:
             echo "$line" >> $GITHUB_ENV
           done
 
-      - name: 设置 Go 构建环境（所有平台）
+      - name: 设置 Go 构建环境
         run: |
           echo "CGO_ENABLED=1" >> $GITHUB_ENV
           echo "GOOS=linux" >> $GITHUB_ENV
           echo "GOARCH=${{ matrix.arch }}" >> $GITHUB_ENV
           if [ -n "${{ matrix.goarm }}" ]; then echo "GOARM=${{ matrix.goarm }}" >> $GITHUB_ENV; fi
 
-      # 仅非 naive 平台：Bootlin musl（armv5、s390x）。
-      - name: 设置 Bootlin musl（armv5、s390x）
+      - name: 设置 Bootlin musl（非 naive 平台）
         if: ${{ matrix.naive != true }}
         run: |
           set -e
@@ -180,14 +166,26 @@ jobs:
         with:
           name: s-ui-linux-${{ matrix.platform }}
           path: ./s-ui-linux-${{ matrix.platform }}.tar.gz
-          retention-days: 30
+          retention-days: 1
 
-      - name: 上传到 Release
-        uses: svenstaro/upload-release-action@v2
+  publish-linux:
+    name: 发布 Linux 产物
+    needs: build-linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: 下载 Linux 构建产物
+        uses: actions/download-artifact@v8
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ inputs.tag }}
-          file: s-ui-linux-${{ matrix.platform }}.tar.gz
-          asset_name: s-ui-linux-${{ matrix.platform }}.tar.gz
+          pattern: s-ui-linux-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: 发布到当前仓库 Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ inputs.tag }}
+          name: S-UI ${{ inputs.tag }}
+          target_commitish: ${{ github.sha }}
           prerelease: true
-          overwrite: true
+          fail_on_unmatched_files: true
+          files: release-assets/*

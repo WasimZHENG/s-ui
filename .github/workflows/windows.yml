@@ -9,6 +9,9 @@ on:
         default: "v1.4.1"
         type: string
 
+permissions:
+  contents: write
+
 env:
   NODE_VERSION: "25"
   TAGS: "with_quic,with_grpc,with_utls,with_acme,with_gvisor,with_naive_outbound,with_purego,badlinkname,tfogo_checklinkname0,with_tailscale"
@@ -21,7 +24,6 @@ jobs:
       - name: 检出仓库
         uses: actions/checkout@v6.0.2
         with:
-          ref: ${{ inputs.tag }}
           submodules: recursive
           fetch-depth: 1
 
@@ -29,14 +31,15 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: "https://registry.npmjs.org"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
 
       - name: 构建前端
         run: |
           cd frontend
           npm install
           npm run build
-          cd ..
 
       - name: 上传前端构建产物
         uses: actions/upload-artifact@v7
@@ -58,8 +61,6 @@ jobs:
     steps:
       - name: 检出仓库
         uses: actions/checkout@v6.0.2
-        with:
-          ref: ${{ inputs.tag }}
 
       - name: 下载前端构建产物
         uses: actions/download-artifact@v8
@@ -77,13 +78,11 @@ jobs:
         if: matrix.arch == 'amd64'
         shell: powershell
         run: |
-          # 如果 Chocolatey 不可用，则安装 Chocolatey
           if (!(Get-Command choco -ErrorAction SilentlyContinue)) {
             Set-ExecutionPolicy Bypass -Scope Process -Force
             [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
             iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
           }
-          # 安装 zip
           choco install zip -y
 
       - name: 构建 s-ui
@@ -114,19 +113,31 @@ jobs:
         run: |
           zip -r "s-ui-windows-${{ matrix.arch }}.zip" s-ui-windows
 
-      - name: 上传文件到构建产物
+      - name: 上传构建产物
         uses: actions/upload-artifact@v7
         with:
           name: s-ui-windows-${{ matrix.arch }}
           path: ./s-ui-windows-${{ matrix.arch }}.zip
-          retention-days: 30
+          retention-days: 1
 
-      - name: 上传到 Release
-        uses: svenstaro/upload-release-action@v2
+  publish-windows:
+    name: 发布 Windows 产物
+    needs: build-windows
+    runs-on: ubuntu-latest
+    steps:
+      - name: 下载 Windows 构建产物
+        uses: actions/download-artifact@v8
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ inputs.tag }}
-          file: s-ui-windows-${{ matrix.arch }}.zip
-          asset_name: s-ui-windows-${{ matrix.arch }}.zip
+          pattern: s-ui-windows-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: 发布到当前仓库 Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ inputs.tag }}
+          name: S-UI ${{ inputs.tag }}
+          target_commitish: ${{ github.sha }}
           prerelease: true
-          overwrite: true
+          fail_on_unmatched_files: true
+          files: release-assets/*

@@ -1,29 +1,15 @@
 #!/usr/bin/env bash
-# Test Docker multi-platform build (linux/amd64, 386, arm64, arm/v7, arm/v6)
-# Requires: frontend_dist/ (run from repo root after building frontend)
+# 测试 Docker 多平台构建（linux/amd64、386、arm64、arm/v7、arm/v6）
 
 set -e
-cd "$(dirname "$0")/.."
-
-echo "==> Preparing frontend_dist..."
-if [ ! -d "frontend_dist" ] || [ -z "$(ls -A frontend_dist 2>/dev/null)" ]; then
-  echo "Building frontend..."
-  (cd frontend && npm install --prefer-offline --no-audit && npm run build)
-  rm -rf frontend_dist
-  mkdir -p frontend_dist
-  cp -R frontend/dist/* frontend_dist/
-  echo "frontend_dist ready."
-else
-  echo "frontend_dist exists, skipping frontend build."
-fi
+cd "$(dirname "$0")"
 
 PLATFORMS="linux/amd64,linux/386,linux/arm64/v8,linux/arm/v7,linux/arm/v6"
-echo "==> Testing Docker build for: $PLATFORMS"
+echo "==> 正在测试 Docker 构建平台：$PLATFORMS"
 docker buildx build \
   --platform "$PLATFORMS" \
-  -f Dockerfile.frontend-artifact \
-  --build-arg CRONET_RELEASE=latest \
+  -f Dockerfile \
   --progress=plain \
   . 2>&1 | tee docker-build-test.log
 
-echo "==> Done. Check docker-build-test.log for full output."
+echo "==> 完成。完整输出请查看 docker-build-test.log。"

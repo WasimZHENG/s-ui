@@ -24,10 +24,6 @@
 | Windows | amd64, 386, arm64 | 支持 |
 | macOS | amd64, arm64 | 实验性支持 |
 
-## 截图
-
-!["主界面"](https://github.com/admin8800/s-ui-frontend/raw/main/media/main.png)
-
 ## API 文档
 
 [API 文档 Wiki](https://github.com/admin8800/s-ui/wiki/API-Documentation)
@@ -125,7 +121,7 @@ docker run -itd \
     -v $PWD/db/:/app/db/ \
     -v $PWD/cert/:/root/cert/ \
     --name s-ui --restart=unless-stopped \
-    alireza7/s-ui:latest
+    ghcr.io/admin8800/s-ui:latest
 ```
 
 > 自行构建镜像
