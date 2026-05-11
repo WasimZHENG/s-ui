@@ -20,9 +20,9 @@
 ## 支持平台
 | 平台 | 架构 | 状态 |
 |----------|--------------|---------|
-| Linux | amd64, arm64, armv7, armv6, armv5, 386, s390x | 支持 |
-| Windows | amd64, 386, arm64 | 支持 |
-| macOS | amd64, arm64 | 实验性支持 |
+| Linux | amd64, arm64, armv7, armv6, armv5, 386, s390x | 仅支持 amd64 |
+| Windows | amd64, 386, arm64 | 暂不支持 |
+| macOS | amd64, arm64 | 暂不支持 |
 
 
 ## 默认安装信息
